@@ -4,6 +4,7 @@ const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
   const [data, setData] = useState({
+    gender: null,
     hartaKotor: 0,
     hutang: 0,
     wasiat: 0,
