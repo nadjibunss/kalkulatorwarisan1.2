@@ -7,6 +7,7 @@ export const DataProvider = ({ children }) => {
     gender: null,
     hartaKotor: 0,
     hutang: 0,
+    biayaMakam: 0,
     wasiat: 0,
     ahliWaris: {}
   });

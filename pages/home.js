@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 
-export default function Step1() {
+export default function HomePage() {
   const [val, setVal] = useState("");
   const [gender, setGender] = useState(null);
   const { setData, data } = useData();
@@ -16,11 +16,15 @@ export default function Step1() {
   };
 
   const next = () => {
+    // The button will be disabled, so direct validation alerts are less critical
+    // but we keep them as a fallback.
     if (!gender) return alert("Pilih jenis kelamin yang meninggal");
-    if (!val || val <= 0) return alert("Masukkan harta kotor yang valid");
+    if (!val || parseFloat(val) <= 0) return alert("Masukkan harta kotor yang valid");
     setData({ ...data, gender: gender, hartaKotor: parseFloat(val) });
     router.push("/hutang");
   };
+
+  const isNextDisabled = !gender || !val || parseFloat(val) <= 0;
 
   return (
     <div className="p-6 max-w-lg mx-auto">
@@ -50,7 +54,13 @@ export default function Step1() {
           placeholder="0"
         />
       </div>
-      <button onClick={next} className="bg-blue-600 text-white px-4 py-2 rounded w-full">Next ➡</button>
+      <button
+        onClick={next}
+        disabled={isNextDisabled}
+        className="bg-blue-600 text-white px-4 py-2 rounded w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
+      >
+        Next ➡
+      </button>
     </div>
   );
 }
