@@ -44,7 +44,7 @@ export default function HasilPage() {
           <div className="flex justify-between"><span>Wasiat:</span> <span>- Rp {wasiat.toLocaleString("id-ID")}</span></div>
         </div>
         <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
-          <span>Harta Siap Waris:</span>
+          <span>Total Warisan:</span>
           <span>Rp {hartaBersih.toLocaleString("id-ID")}</span>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 
-export default function Step4() {
+export default function AhliWarisPage() {
   const { setData, data } = useData();
   const router = useRouter();
 
@@ -22,22 +22,35 @@ export default function Step4() {
     router.push("/hasil");
   };
 
+  const checkboxLabelStyle = "flex items-center space-x-2 text-lg mb-2";
+  const inputStyle = "border p-2 rounded-md w-20 text-center";
+
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold mb-4">Step 4: Data Ahli Waris</h1>
+    <div className="p-6 max-w-lg mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <h1 className="text-xl font-bold mb-4 text-center">Step 4: Data Ahli Waris</h1>
 
-      {data.gender === 'perempuan' && (
-        <label className="block"><input type="checkbox" onChange={(e) => update("suami", e.target.checked)} /> Suami</label>
-      )}
-      {data.gender === 'laki' && (
-        <label className="block"><input type="checkbox" onChange={(e) => update("istri", e.target.checked)} /> Istri</label>
-      )}
+      <div className="space-y-3">
+        {data.gender === 'perempuan' && (
+          <label className={checkboxLabelStyle}><input type="checkbox" className="h-5 w-5" onChange={(e) => update("suami", e.target.checked)} /> <span>Suami</span></label>
+        )}
+        {data.gender === 'laki' && (
+          <label className={checkboxLabelStyle}><input type="checkbox" className="h-5 w-5" onChange={(e) => update("istri", e.target.checked)} /> <span>Istri</span></label>
+        )}
 
-      <label className="block"><input type="checkbox" onChange={(e) => update("ayah", e.target.checked)} /> Ayah</label>
-      <label className="block"><input type="checkbox" onChange={(e) => update("ibu", e.target.checked)} /> Ibu</label>
-      <label>Anak Laki-laki: <input type="number" onChange={(e) => update("anakL", parseInt(e.target.value) || 0)} /></label>
-      <label>Anak Perempuan: <input type="number" onChange={(e) => update("anakP", parseInt(e.target.value) || 0)} /></label>
-      <div className="flex justify-between mt-4">
+        <label className={checkboxLabelStyle}><input type="checkbox" className="h-5 w-5" onChange={(e) => update("ayah", e.target.checked)} /> <span>Ayah</span></label>
+        <label className={checkboxLabelStyle}><input type="checkbox" className="h-5 w-5" onChange={(e) => update("ibu", e.target.checked)} /> <span>Ibu</span></label>
+
+        <div className="flex items-center justify-between py-2">
+          <label htmlFor="anakLaki" className="text-lg">Anak Laki-laki:</label>
+          <input id="anakLaki" type="number" min="0" defaultValue="0" onChange={(e) => update("anakL", parseInt(e.target.value) || 0)} className={inputStyle} />
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <label htmlFor="anakPerempuan" className="text-lg">Anak Perempuan:</label>
+          <input id="anakPerempuan" type="number" min="0" defaultValue="0" onChange={(e) => update("anakP", parseInt(e.target.value) || 0)} className={inputStyle} />
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-4">
         <button onClick={() => router.back()} className="bg-gray-500 text-white px-4 py-2 rounded">⬅ Back</button>
         <button onClick={next} className="bg-blue-600 text-white px-4 py-2 rounded">Next ➡</button>
       </div>

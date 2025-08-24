@@ -41,7 +41,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <h2 className="text-lg font-semibold mb-2">Step 1: Total Harta Kotor</h2>
+      <h2 className="text-lg font-semibold mb-2">Harta Waris</h2>
       <div className="relative mb-4">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
           Rp
