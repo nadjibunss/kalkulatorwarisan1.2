@@ -6,46 +6,34 @@ import { useEffect, useState } from "react";
 export default function PenjelasanPage() {
   const { data } = useData();
   const router = useRouter();
-  const [hasil, setHasil] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  useEffect(() => {
-    if (!isClient) return;
-
-    // Redirect if data is incomplete, which can happen on page refresh
-    if (!data.gender || typeof data.hartaKotor === 'undefined' || data.hartaKotor === 0) {
-      router.push('/home');
-      return;
+  if (!isClient || !data.gender) {
+    // Render a loading state or null on the server and on the initial client render.
+    // This prevents a hydration mismatch.
+    // Also, redirect if essential data is missing (e.g., page refresh).
+    if (isClient) {
+        router.replace('/home');
     }
-
-    const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
-    const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
-
-    if (hartaBersih > 0) {
-      setHasil(hitungFaraid(hartaBersih, ahliWaris || {}));
-    } else {
-      setHasil({}); // Set hasil to empty if no assets to distribute
-    }
-  }, [isClient, data]);
-
-  if (!isClient || !hasil) {
     return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>;
   }
 
   const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
   const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
-  const blockedHeirs = Object.entries(hasil).filter(([key, value]) => value.status.includes("Terhalang"));
-  const asabahHeirs = Object.entries(hasil).filter(([key, value]) => value.deskripsi.includes("Aṣabah"));
+  const hasil = hitungFaraid(hartaBersih, ahliWaris || {});
+
+  const blockedHeirs = Object.entries(hasil).filter(([, value]) => value.status.includes("Terhalang"));
+  const asabahHeirs = Object.entries(hasil).filter(([, value]) => value.deskripsi.includes("Aṣabah"));
 
   const toTitleCase = (str) => {
     if (!str) return '';
     const spaced = str.replace(/([A-Z])/g, ' $1').replace('L', ' Laki-laki').replace('P', ' Perempuan');
     return spaced.replace(/^./, (s) => s.toUpperCase()).trim();
-  }
+  };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-6">

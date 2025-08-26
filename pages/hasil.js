@@ -12,8 +12,15 @@ export default function HasilPage() {
     setIsClient(true);
   }, []);
 
+  // This effect handles the case where the user navigates directly to this page
+  useEffect(() => {
+    if (isClient && (!data.gender || !data.hartaKotor)) {
+        router.replace('/home');
+    }
+  }, [isClient, data.gender, data.hartaKotor, router]);
+
   if (!isClient || !data.gender) {
-    // Render loading state or null on server and on initial client render
+    // Render a loading state on the server and on initial client render to avoid hydration mismatch
     return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>;
   }
 
@@ -34,7 +41,10 @@ export default function HasilPage() {
       hutang: 0,
       biayaMakam: 0,
       wasiat: 0,
-      ahliWaris: {}
+      ahliWaris: {
+        suami: false, istri: false, ayah: false, ibu: false, kakek: false, nenek: false,
+        anakL: 0, anakP: 0, cucuL: 0, cucuP: 0, saudaraL: 0, saudaraP: 0,
+      }
     });
     router.push('/home');
   }

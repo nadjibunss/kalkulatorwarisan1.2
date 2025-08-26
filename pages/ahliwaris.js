@@ -6,42 +6,47 @@ export default function AhliWarisPage() {
   const { setData, data } = useData();
   const router = useRouter();
 
+  // Initialize state from context, providing a full default object
   const [waris, setWaris] = useState(data.ahliWaris || {
     suami: false, istri: false, ayah: false, ibu: false, kakek: false, nenek: false,
     anakL: 0, anakP: 0, cucuL: 0, cucuP: 0, saudaraL: 0, saudaraP: 0,
   });
 
-  // Hijab (Blocking) Logic
-  const ayahExists = waris.ayah;
-  const ibuExists = waris.ibu;
-  const anakLExists = waris.anakL > 0;
-
-  const kakekBlocked = ayahExists;
-  const nenekBlocked = ibuExists;
-  const cucuBlocked = anakLExists;
-  const saudaraBlocked = anakLExists || ayahExists;
-
-  // Effect to automatically uncheck/reset blocked heirs
+  // This effect syncs the local state if the context changes (e.g., user navigates back and forth)
   useEffect(() => {
-    const newWaris = { ...waris };
-    let changed = false;
+    setWaris(data.ahliWaris);
+  }, [data.ahliWaris]);
 
-    if (kakekBlocked && newWaris.kakek) { newWaris.kakek = false; changed = true; }
-    if (nenekBlocked && newWaris.nenek) { newWaris.nenek = false; changed = true; }
-    if (cucuBlocked && (newWaris.cucuL > 0 || newWaris.cucuP > 0)) { newWaris.cucuL = 0; newWaris.cucuP = 0; changed = true; }
-    if (saudaraBlocked && (newWaris.saudaraL > 0 || newWaris.saudaraP > 0)) { newWaris.saudaraL = 0; newWaris.saudaraP = 0; changed = true; }
+  const updateWaris = (key, value) => {
+    setWaris(prevWaris => {
+      const newWaris = { ...prevWaris, [key]: value };
 
-    if (changed) {
-      setWaris(newWaris);
-    }
-  }, [waris.ayah, waris.ibu, waris.anakL]); // Re-run effect when these change
+      // --- Hijab (Blocking) Logic ---
+      // Apply blocking rules directly within the state update
+      const ayahExists = newWaris.ayah;
+      const ibuExists = newWaris.ibu;
+      const anakLExists = newWaris.anakL > 0;
 
-  const updateWaris = (key, e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : (parseInt(e.target.value, 10) || 0);
-    setWaris(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+      // If Ayah is present, he blocks kakek and all siblings.
+      if (ayahExists) {
+        newWaris.kakek = false;
+        newWaris.saudaraL = 0;
+        newWaris.saudaraP = 0;
+      }
+      // If Ibu is present, she blocks nenek.
+      if (ibuExists) {
+        newWaris.nenek = false;
+      }
+      // If a son exists, he blocks all grandchildren and all siblings.
+      if (anakLExists) {
+        newWaris.cucuL = 0;
+        newWaris.cucuP = 0;
+        newWaris.saudaraL = 0;
+        newWaris.saudaraP = 0;
+      }
+
+      return newWaris;
+    });
   };
 
   const next = () => {
@@ -53,6 +58,13 @@ export default function AhliWarisPage() {
     alert(message);
   };
 
+  // --- Derived states for disabling inputs ---
+  const isKakekBlocked = waris.ayah;
+  const isNenekBlocked = waris.ibu;
+  const isCucuBlocked = waris.anakL > 0;
+  const isSaudaraBlocked = waris.anakL > 0 || waris.ayah;
+
+  // --- Styling constants ---
   const checkboxLabelStyle = "flex items-center space-x-3 text-lg";
   const checkboxInputStyle = "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
   const numberInputContainerStyle = "flex items-center justify-between py-2";
@@ -66,48 +78,49 @@ export default function AhliWarisPage() {
       <div className="space-y-4">
         {/* Pasangan */}
         {data.gender === 'perempuan' && (
-          <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.suami} className={checkboxInputStyle} onChange={(e) => updateWaris("suami", e)} /> <span>Suami</span></label>
+          <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.suami} className={checkboxInputStyle} onChange={(e) => updateWaris("suami", e.target.checked)} /> <span>Suami</span></label>
         )}
         {data.gender === 'laki' && (
-          <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.istri} className={checkboxInputStyle} onChange={(e) => updateWaris("istri", e)} /> <span>Istri</span></label>
+          <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.istri} className={checkboxInputStyle} onChange={(e) => updateWaris("istri", e.target.checked)} /> <span>Istri</span></label>
         )}
 
         {/* Garis Lurus ke Atas */}
-        <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.ayah} className={checkboxInputStyle} onChange={(e) => updateWaris("ayah", e)} /> <span>Ayah</span></label>
-        <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.ibu} className={checkboxInputStyle} onChange={(e) => updateWaris("ibu", e)} /> <span>Ibu</span></label>
-        <div onClick={kakekBlocked ? () => handleBlockedClick("Kakek terhalang (hijab) oleh Ayah.") : undefined} className={kakekBlocked ? 'cursor-not-allowed' : ''}>
-          <label className={`${checkboxLabelStyle} ${kakekBlocked ? 'opacity-50' : ''}`}><input type="checkbox" disabled={kakekBlocked} checked={waris.kakek} className={checkboxInputStyle} onChange={(e) => updateWaris("kakek", e)} /> <span>Kakek (dari Ayah)</span></label>
+        <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.ayah} className={checkboxInputStyle} onChange={(e) => updateWaris("ayah", e.target.checked)} /> <span>Ayah</span></label>
+        <label className={checkboxLabelStyle}><input type="checkbox" checked={waris.ibu} className={checkboxInputStyle} onChange={(e) => updateWaris("ibu", e.target.checked)} /> <span>Ibu</span></label>
+
+        <div onClick={isKakekBlocked ? () => handleBlockedClick("Kakek terhalang (hijab) oleh Ayah.") : undefined} className={isKakekBlocked ? 'cursor-not-allowed' : ''}>
+          <label className={`${checkboxLabelStyle} ${isKakekBlocked ? 'opacity-50' : ''}`}><input type="checkbox" disabled={isKakekBlocked} checked={waris.kakek} className={checkboxInputStyle} onChange={(e) => updateWaris("kakek", e.target.checked)} /> <span>Kakek (dari Ayah)</span></label>
         </div>
-        <div onClick={nenekBlocked ? () => handleBlockedClick("Nenek terhalang (hijab) oleh Ibu.") : undefined} className={nenekBlocked ? 'cursor-not-allowed' : ''}>
-          <label className={`${checkboxLabelStyle} ${nenekBlocked ? 'opacity-50' : ''}`}><input type="checkbox" disabled={nenekBlocked} checked={waris.nenek} className={checkboxInputStyle} onChange={(e) => updateWaris("nenek", e)} /> <span>Nenek (dari Ibu/Ayah)</span></label>
+        <div onClick={isNenekBlocked ? () => handleBlockedClick("Nenek terhalang (hijab) oleh Ibu.") : undefined} className={isNenekBlocked ? 'cursor-not-allowed' : ''}>
+          <label className={`${checkboxLabelStyle} ${isNenekBlocked ? 'opacity-50' : ''}`}><input type="checkbox" disabled={isNenekBlocked} checked={waris.nenek} className={checkboxInputStyle} onChange={(e) => updateWaris("nenek", e.target.checked)} /> <span>Nenek (dari Ibu/Ayah)</span></label>
         </div>
 
         {/* Garis Lurus ke Bawah */}
         <div className={numberInputContainerStyle}>
           <label htmlFor="anakLaki" className={numberInputLabelStyle}>Anak Laki-laki:</label>
-          <input id="anakLaki" type="number" min="0" value={waris.anakL} onChange={(e) => updateWaris("anakL", e)} className={numberInputStyle} />
+          <input id="anakLaki" type="number" min="0" value={waris.anakL} onChange={(e) => updateWaris("anakL", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
         <div className={numberInputContainerStyle}>
           <label htmlFor="anakPerempuan" className={numberInputLabelStyle}>Anak Perempuan:</label>
-          <input id="anakPerempuan" type="number" min="0" value={waris.anakP} onChange={(e) => updateWaris("anakP", e)} className={numberInputStyle} />
+          <input id="anakPerempuan" type="number" min="0" value={waris.anakP} onChange={(e) => updateWaris("anakP", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
-        <div onClick={cucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${cucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div onClick={isCucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${isCucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <label htmlFor="cucuLaki" className={numberInputLabelStyle}>Cucu Laki-laki:</label>
-          <input id="cucuLaki" type="number" min="0" value={waris.cucuL} disabled={cucuBlocked} onChange={(e) => updateWaris("cucuL", e)} className={numberInputStyle} />
+          <input id="cucuLaki" type="number" min="0" value={waris.cucuL} disabled={isCucuBlocked} onChange={(e) => updateWaris("cucuL", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
-        <div onClick={cucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${cucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div onClick={isCucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${isCucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <label htmlFor="cucuPerempuan" className={numberInputLabelStyle}>Cucu Perempuan:</label>
-          <input id="cucuPerempuan" type="number" min="0" value={waris.cucuP} disabled={cucuBlocked} onChange={(e) => updateWaris("cucuP", e)} className={numberInputStyle} />
+          <input id="cucuPerempuan" type="number" min="0" value={waris.cucuP} disabled={isCucuBlocked} onChange={(e) => updateWaris("cucuP", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
 
         {/* Garis Samping (Saudara) */}
-        <div onClick={saudaraBlocked ? () => handleBlockedClick("Saudara terhalang (hijab) oleh Ayah atau Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${saudaraBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div onClick={isSaudaraBlocked ? () => handleBlockedClick("Saudara terhalang (hijab) oleh Ayah atau Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${isSaudaraBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <label htmlFor="saudaraLaki" className={numberInputLabelStyle}>Saudara Laki-laki:</label>
-          <input id="saudaraLaki" type="number" min="0" value={waris.saudaraL} disabled={saudaraBlocked} onChange={(e) => updateWaris("saudaraL", e)} className={numberInputStyle} />
+          <input id="saudaraLaki" type="number" min="0" value={waris.saudaraL} disabled={isSaudaraBlocked} onChange={(e) => updateWaris("saudaraL", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
-        <div onClick={saudaraBlocked ? () => handleBlockedClick("Saudara terhalang (hijab) oleh Ayah atau Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${saudaraBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div onClick={isSaudaraBlocked ? () => handleBlockedClick("Saudara terhalang (hijab) oleh Ayah atau Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${isSaudaraBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <label htmlFor="saudaraPerempuan" className={numberInputLabelStyle}>Saudara Perempuan:</label>
-          <input id="saudaraPerempuan" type="number" min="0" value={waris.saudaraP} disabled={saudaraBlocked} onChange={(e) => updateWaris("saudaraP", e)} className={numberInputStyle} />
+          <input id="saudaraPerempuan" type="number" min="0" value={waris.saudaraP} disabled={isSaudaraBlocked} onChange={(e) => updateWaris("saudaraP", parseInt(e.target.value) || 0)} className={numberInputStyle} />
         </div>
       </div>
 
