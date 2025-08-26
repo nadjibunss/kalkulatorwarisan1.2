@@ -29,11 +29,22 @@ export default function PenjelasanPage() {
   const blockedHeirs = Object.entries(hasil).filter(([, value]) => value.status.includes("Terhalang"));
   const asabahHeirs = Object.entries(hasil).filter(([, value]) => value.deskripsi.includes("Aṣabah"));
 
-  const toTitleCase = (str) => {
-    if (!str) return '';
-    const spaced = str.replace(/([A-Z])/g, ' $1').replace('L', ' Laki-laki').replace('P', ' Perempuan');
-    return spaced.replace(/^./, (s) => s.toUpperCase()).trim();
+  const heirNames = {
+    suami: 'Suami',
+    istri: 'Istri',
+    ayah: 'Ayah',
+    ibu: 'Ibu',
+    kakek: 'Kakek',
+    nenek: 'Nenek',
+    anakL: 'Anak Laki-laki',
+    anakP: 'Anak Perempuan',
+    cucuL: 'Cucu Laki-laki',
+    cucuP: 'Cucu Perempuan',
+    saudaraL: 'Saudara Laki-laki',
+    saudaraP: 'Saudara Perempuan',
   };
+
+  const getHeirName = (key) => heirNames[key] || key;
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-6">
@@ -53,7 +64,7 @@ export default function PenjelasanPage() {
               <ul className="list-disc list-inside space-y-1 text-red-700">
                 {blockedHeirs.map(([key, value]) => (
                   <li key={key}>
-                    <strong>{toTitleCase(key)}:</strong> {value.deskripsi}
+                    <strong>{getHeirName(key)}:</strong> {value.deskripsi}
                   </li>
                 ))}
               </ul>
@@ -68,7 +79,7 @@ export default function PenjelasanPage() {
               <ul className="list-disc list-inside space-y-1 text-blue-700">
                 {asabahHeirs.map(([key, value]) => (
                   <li key={key}>
-                    <strong>{toTitleCase(key)}:</strong> Menjadi <strong>{value.deskripsi}</strong>.
+                <strong>{getHeirName(key)}:</strong> Menjadi <strong>{value.deskripsi}</strong>.
                   </li>
                 ))}
               </ul>

@@ -28,11 +28,31 @@ export default function HasilPage() {
   const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
   const hasil = hitungFaraid(hartaBersih, ahliWaris || {});
 
-  const toTitleCase = (str) => {
-    if (!str) return '';
-    const spaced = str.replace(/([A-Z])/g, ' $1').replace('L', ' Laki-laki').replace('P', ' Perempuan');
-    return spaced.replace(/^./, (s) => s.toUpperCase()).trim();
-  }
+  const heirNames = {
+    suami: 'Suami',
+    istri: 'Istri',
+    ayah: 'Ayah',
+    ibu: 'Ibu',
+    kakek: 'Kakek',
+    nenek: 'Nenek',
+    anakL: 'Anak Laki-laki',
+    anakP: 'Anak Perempuan',
+    cucuL: 'Cucu Laki-laki',
+    cucuP: 'Cucu Perempuan',
+    saudaraL: 'Saudara Laki-laki',
+    saudaraP: 'Saudara Perempuan',
+  };
+
+  const getHeirName = (key) => heirNames[key] || key;
+
+  const formatRupiah = (number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(number);
+  };
 
   const restart = () => {
     setData({
@@ -56,14 +76,14 @@ export default function HasilPage() {
       <div className="bg-gray-50 p-4 rounded-lg">
         <h2 className="text-lg font-semibold mb-3 border-b pb-2">Rincian Harta</h2>
         <div className="space-y-2 text-gray-700">
-          <div className="flex justify-between"><span>Harta Kotor:</span> <span>Rp {hartaKotor.toLocaleString("id-ID")}</span></div>
-          <div className="flex justify-between"><span>Hutang:</span> <span>- Rp {hutang.toLocaleString("id-ID")}</span></div>
-          <div className="flex justify-between"><span>Biaya Pengurusan Jenazah:</span> <span>- Rp {biayaMakam.toLocaleString("id-ID")}</span></div>
-          <div className="flex justify-between"><span>Wasiat:</span> <span>- Rp {wasiat.toLocaleString("id-ID")}</span></div>
+          <div className="flex justify-between"><span>Harta Waris:</span> <span>{formatRupiah(hartaKotor)}</span></div>
+          <div className="flex justify-between"><span>Hutang:</span> <span>- {formatRupiah(hutang)}</span></div>
+          <div className="flex justify-between"><span>Biaya Pengurusan Jenazah:</span> <span>- {formatRupiah(biayaMakam)}</span></div>
+          <div className="flex justify-between"><span>Wasiat:</span> <span>- {formatRupiah(wasiat)}</span></div>
         </div>
         <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
           <span>Total Warisan:</span>
-          <span>Rp {hartaBersih.toLocaleString("id-ID")}</span>
+          <span>{formatRupiah(hartaBersih)}</span>
         </div>
       </div>
 
@@ -82,10 +102,10 @@ export default function HasilPage() {
               <tbody className="divide-y divide-gray-200">
                 {Object.keys(hasil).length > 0 ? (
                   Object.entries(hasil).map(([key, value]) => (
-                    <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">{toTitleCase(key)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{value.deskripsi || value.status}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">Rp {value.jumlah.toLocaleString("id-ID")}</td>
+                    <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{getHeirName(key)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{value.deskripsi || value.status}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">{formatRupiah(value.jumlah)}</td>
                     </tr>
                   ))
                 ) : (
