@@ -1,23 +1,31 @@
 import { useRouter } from "next/router";
 import { useData } from "../context/DataContext";
 import hitungFaraid from "../utils/faraid";
+import { useEffect, useState } from "react";
 
 export default function HasilPage() {
   const { data, setData } = useData();
   const router = useRouter();
-  const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
+  const [isClient, setIsClient] = useState(false);
 
-  // Ensure data is available before rendering
-  if (!hartaKotor) {
-    // Or show a loading state
-    if (typeof window !== 'undefined') {
-      router.push('/home');
-    }
-    return null;
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient || !data.gender) {
+    // Render loading state or null on server and on initial client render
+    return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>;
   }
 
-  const hartaBersih = hartaKotor - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
+  const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
+  const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
   const hasil = hitungFaraid(hartaBersih, ahliWaris || {});
+
+  const toTitleCase = (str) => {
+    if (!str) return '';
+    const spaced = str.replace(/([A-Z])/g, ' $1').replace('L', ' Laki-laki').replace('P', ' Perempuan');
+    return spaced.replace(/^./, (s) => s.toUpperCase()).trim();
+  }
 
   const restart = () => {
     setData({
@@ -65,7 +73,7 @@ export default function HasilPage() {
                 {Object.keys(hasil).length > 0 ? (
                   Object.entries(hasil).map(([key, value]) => (
                     <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">{toTitleCase(key)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{value.deskripsi || value.status}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">Rp {value.jumlah.toLocaleString("id-ID")}</td>
                     </tr>

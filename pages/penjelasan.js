@@ -6,37 +6,45 @@ import { useEffect, useState } from "react";
 export default function PenjelasanPage() {
   const { data } = useData();
   const router = useRouter();
-  const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
   const [hasil, setHasil] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     // Redirect if data is incomplete, which can happen on page refresh
-    if (!data.gender || typeof data.hartaKotor === 'undefined') {
-      if (typeof window !== 'undefined') {
-        router.push('/home');
-      }
+    if (!data.gender || typeof data.hartaKotor === 'undefined' || data.hartaKotor === 0) {
+      router.push('/home');
       return;
     }
 
+    const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
     const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
+
     if (hartaBersih > 0) {
       setHasil(hitungFaraid(hartaBersih, ahliWaris || {}));
     } else {
       setHasil({}); // Set hasil to empty if no assets to distribute
     }
-  }, [JSON.stringify(data)]); // Use stringify to prevent infinite loop on object reference change
+  }, [isClient, data]);
 
-  if (!hasil) {
-    return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>; // Loading state
+  if (!isClient || !hasil) {
+    return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>;
   }
 
+  const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
   const hartaBersih = (hartaKotor || 0) - (hutang || 0) - (biayaMakam || 0) - (wasiat || 0);
   const blockedHeirs = Object.entries(hasil).filter(([key, value]) => value.status.includes("Terhalang"));
   const asabahHeirs = Object.entries(hasil).filter(([key, value]) => value.deskripsi.includes("Aṣabah"));
 
   const toTitleCase = (str) => {
     if (!str) return '';
-    return str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+    const spaced = str.replace(/([A-Z])/g, ' $1').replace('L', ' Laki-laki').replace('P', ' Perempuan');
+    return spaced.replace(/^./, (s) => s.toUpperCase()).trim();
   }
 
   return (
@@ -52,7 +60,7 @@ export default function PenjelasanPage() {
         <>
           {/* Hijab Section */}
           {blockedHeirs.length > 0 && (
-            <div className="bg-red-50 p-4 rounded-lg">
+            <div className="bg-red-50 p-4 rounded-lg mt-4">
               <h2 className="text-lg font-semibold mb-2 text-red-800">Ahli Waris yang Terhalang (Hijab)</h2>
               <ul className="list-disc list-inside space-y-1 text-red-700">
                 {blockedHeirs.map(([key, value]) => (
@@ -66,7 +74,7 @@ export default function PenjelasanPage() {
 
           {/* Asabah Section */}
           {asabahHeirs.length > 0 && (
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg mt-4">
               <h2 className="text-lg font-semibold mb-2 text-blue-800">Ahli Waris 'Aṣabah</h2>
               <p className="text-sm text-blue-700 mb-2">'Aṣabah adalah ahli waris yang menerima sisa harta setelah pembagian Ashabul Furudh (bagian tetap).</p>
               <ul className="list-disc list-inside space-y-1 text-blue-700">
@@ -80,11 +88,11 @@ export default function PenjelasanPage() {
           )}
 
           {Object.keys(hasil).length > 0 && blockedHeirs.length === 0 && asabahHeirs.length === 0 && (
-              <p className="text-center text-gray-600">Semua ahli waris yang ada mendapatkan bagian tetap (Ashabul Furudh) dan tidak ada yang menjadi 'Aṣabah atau terhalang.</p>
+              <p className="text-center text-gray-600 mt-4">Semua ahli waris yang ada mendapatkan bagian tetap (Ashabul Furudh) dan tidak ada yang menjadi 'Aṣabah atau terhalang.</p>
           )}
 
-          {Object.keys(hasil).length === 0 && (
-             <p className="text-center text-gray-600">Tidak ada ahli waris yang berhak menerima warisan.</p>
+          {Object.keys(hasil).length === 0 && hartaBersih > 0 &&(
+             <p className="text-center text-gray-600 mt-4">Tidak ada ahli waris yang berhak menerima warisan.</p>
           )}
         </>
       )}
