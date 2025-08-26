@@ -56,20 +56,22 @@ export default function HasilPage() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ahli Waris</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Bagian Diterima</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status / Keterangan</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Diterima</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {Object.keys(hasil).length > 0 ? (
                 Object.entries(hasil).map(([key, value]) => (
-                  <tr key={key}>
+                  <tr key={key} className={value.status === 'Terhalang' ? 'bg-red-50 text-gray-500' : ''}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">Rp {value.toLocaleString("id-ID")}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{value.deskripsi || value.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">Rp {value.jumlah.toLocaleString("id-ID")}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="2" className="px-6 py-4 text-center text-gray-500">Tidak ada ahli waris yang berhak menerima.</td>
+                  <td colSpan="3" className="px-6 py-4 text-center text-gray-500">Tidak ada ahli waris yang berhak menerima.</td>
                 </tr>
               )}
             </tbody>
