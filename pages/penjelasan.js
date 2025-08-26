@@ -1,12 +1,6 @@
 import { useRouter } from "next/router";
 import { useData } from "../context/DataContext";
 import hitungFaraid from "../utils/faraid";
-
-export default function PenjelasanPage() {
-  const { data } = useData();
-  const router = useRouter();
-  const { hartaKotor, hutang, wasiat, biayaMakam, ahliWaris } = data;
-
 import { useEffect, useState } from "react";
 
 export default function PenjelasanPage() {
@@ -40,7 +34,10 @@ export default function PenjelasanPage() {
   const blockedHeirs = Object.entries(hasil).filter(([key, value]) => value.status.includes("Terhalang"));
   const asabahHeirs = Object.entries(hasil).filter(([key, value]) => value.deskripsi.includes("Aṣabah"));
 
-  const toTitleCase = (str) => str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+  const toTitleCase = (str) => {
+    if (!str) return '';
+    return str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+  }
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-6">
@@ -82,8 +79,12 @@ export default function PenjelasanPage() {
             </div>
           )}
 
-          {blockedHeirs.length === 0 && asabahHeirs.length === 0 && Object.keys(hasil).length > 0 && (
+          {Object.keys(hasil).length > 0 && blockedHeirs.length === 0 && asabahHeirs.length === 0 && (
               <p className="text-center text-gray-600">Semua ahli waris yang ada mendapatkan bagian tetap (Ashabul Furudh) dan tidak ada yang menjadi 'Aṣabah atau terhalang.</p>
+          )}
+
+          {Object.keys(hasil).length === 0 && (
+             <p className="text-center text-gray-600">Tidak ada ahli waris yang berhak menerima warisan.</p>
           )}
         </>
       )}
