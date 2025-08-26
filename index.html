@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Waris Sederhana</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; }
+        #ahliWarisContainer { display: flex; flex-wrap: wrap; gap: 15px; }
+        .waris-item { border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
+        .waris-item.disabled { background-color: #f0f0f0; color: #999; }
+        #infoPanel { margin-top: 20px; padding: 15px; border: 1px solid #eee; background-color: #f9f9f9; border-radius: 5px; min-height: 50px; }
+    </style>
+</head>
+<body>
+    <h1>Data Ahli Waris</h1>
+    <p>Pilih ahli waris yang ada. Sistem akan secara otomatis menyesuaikan berdasarkan aturan Hijab.</p>
+    <div id="ahliWarisContainer"></div>
+
+    <h2>Keterangan</h2>
+    <div id="infoPanel">
+        <p id="ashabahInfo"></p>
+    </div>
+
+    <script>
+        // Data ahli waris dan aturan hijab
+        const ahliWarisData = [
+            { id: 'ayah', nama: 'Ayah', menghijab: ['kakek', 'saudara_lk', 'saudara_pr'], terhijab_oleh: [], is_ashabah_bin_nafsi: true },
+            { id: 'ibu', nama: 'Ibu', menghijab: ['nenek'], terhijab_oleh: [] },
+            { id: 'anak_lk', nama: 'Anak Laki-laki', menghijab: ['cucu_lk', 'cucu_pr', 'saudara_lk', 'saudara_pr'], terhijab_oleh: [], is_ashabah_bin_nafsi: true },
+            { id: 'anak_pr', nama: 'Anak Perempuan', menghijab: [], terhijab_oleh: [] },
+            { id: 'kakek', nama: 'Kakek (dari Ayah)', menghijab: ['saudara_lk', 'saudara_pr'], terhijab_oleh: ['ayah', 'anak_lk'], is_ashabah_bin_nafsi: true },
+            { id: 'nenek', nama: 'Nenek (dari Ibu/Ayah)', menghijab: [], terhijab_oleh: ['ibu'] },
+            { id: 'cucu_lk', nama: 'Cucu Laki-laki (dari Anak Lk)', menghijab: ['saudara_lk', 'saudara_pr'], terhijab_oleh: ['anak_lk'], is_ashabah_bin_nafsi: true },
+            { id: 'cucu_pr', nama: 'Cucu Perempuan (dari Anak Lk)', menghijab: [], terhijab_oleh: ['anak_lk'] },
+            { id: 'saudara_lk', nama: 'Saudara Laki-laki', menghijab: [], terhijab_oleh: ['ayah', 'anak_lk', 'cucu_lk', 'kakek'], is_ashabah_bin_nafsi: true },
+            { id: 'saudara_pr', nama: 'Saudari Perempuan', menghijab: [], terhijab_oleh: ['ayah', 'anak_lk', 'cucu_lk', 'kakek'] }
+        ];
+
+        const container = document.getElementById('ahliWarisContainer');
+
+        // Membuat checkbox untuk setiap ahli waris
+        ahliWarisData.forEach(aw => {
+            const div = document.createElement('div');
+            div.className = 'waris-item';
+            div.id = `item-${aw.id}`;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = aw.id;
+            checkbox.name = 'ahliWaris';
+            checkbox.value = aw.id;
+
+            const label = document.createElement('label');
+            label.htmlFor = aw.id;
+            label.textContent = aw.nama;
+
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+
+        // Aturan untuk Ashabah bil Ghair
+        const ashabahBilGhairRules = [
+            { perempuan: 'anak_pr', laki: 'anak_lk', keterangan: 'Anak Perempuan menjadi Ashabah bil Ghair karena bersama Anak Laki-laki.' },
+            { perempuan: 'cucu_pr', laki: 'cucu_lk', keterangan: 'Cucu Perempuan menjadi Ashabah bil Ghair karena bersama Cucu Laki-laki.' },
+            { perempuan: 'saudara_pr', laki: 'saudara_lk', keterangan: 'Saudari Perempuan menjadi Ashabah bil Ghair karena bersama Saudara Laki-laki.' }
+        ];
+
+        // Aturan untuk Ashabah ma'al Ghair
+        const ashabahMaalGhairRules = [
+            {
+                ahli_waris: 'saudara_pr',
+                bersama: ['anak_pr', 'cucu_pr'],
+                keterangan: 'Saudari Perempuan menjadi Ashabah ma\'al Ghair karena bersama Anak/Cucu Perempuan.'
+            }
+        ];
+
+        // --- LOGIKA UTAMA ---
+        const checkboxes = document.querySelectorAll('input[name="ahliWaris"]');
+        const ashabahInfoEl = document.getElementById('ashabahInfo');
+
+        function updateWarisStatus() {
+            const selectedIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            const allBlockedIds = new Set();
+
+            // Tentukan siapa saja yang di-hijab oleh ahli waris yang terpilih
+            selectedIds.forEach(selectedId => {
+                const penghijab = ahliWarisData.find(aw => aw.id === selectedId);
+                if (penghijab && penghijab.menghijab) {
+                    penghijab.menghijab.forEach(blockedId => allBlockedIds.add(blockedId));
+                }
+            });
+
+            // Logika terbalik: periksa setiap ahli waris, apakah mereka di-hijab oleh salah satu yang terpilih?
+            ahliWarisData.forEach(aw => {
+                const isBlocked = aw.terhijab_oleh.some(blockerId => selectedIds.includes(blockerId));
+                if (isBlocked) {
+                    allBlockedIds.add(aw.id);
+                }
+            });
+
+            let hijabMessages = [];
+            // Terapkan status ke UI
+            checkboxes.forEach(cb => {
+                const itemDiv = document.getElementById(`item-${cb.id}`);
+                const label = itemDiv.querySelector('label');
+
+                if (allBlockedIds.has(cb.id)) {
+                    cb.disabled = true;
+                    cb.checked = false; // Batalkan pilihan jika ter-hijab
+                    itemDiv.classList.add('disabled');
+
+                    // Cari tahu siapa yang menghijab untuk pesan penjelasan
+                    const blockedInfo = ahliWarisData.find(aw => aw.id === cb.id);
+                    let blockerName = "seseorang";
+                    const blockerId = blockedInfo.terhijab_oleh.find(b => selectedIds.includes(b)) || ahliWarisData.find(aw => aw.menghijab.includes(cb.id) && selectedIds.includes(aw.id))?.id;
+
+                    if(blockerId) {
+                        const blockerData = ahliWarisData.find(aw => aw.id === blockerId);
+                        if(blockerData) blockerName = blockerData.nama;
+                    }
+                    hijabMessages.push(`- ${blockedInfo.nama} ter-hijab (terhalang) oleh ${blockerName}.`);
+
+                    // Tambahkan notifikasi saat mencoba mengklik
+                    itemDiv.onclick = (e) => {
+                        if (cb.disabled) {
+                            e.preventDefault();
+                            alert(`${label.textContent} ter-hijab (terhalang) oleh ${blockerName}.`);
+                        }
+                    };
+                } else {
+                    cb.disabled = false;
+                    itemDiv.classList.remove('disabled');
+                    itemDiv.onclick = null; // Hapus event click
+                }
+            });
+
+            // --- Logika Ashabah (Versi Diperbarui) ---
+            const activeIds = Array.from(checkboxes)
+                .filter(cb => cb.checked && !cb.disabled)
+                .map(cb => cb.value);
+
+            const activeAhliWaris = activeIds.map(id => ahliWarisData.find(aw => aw.id === id));
+
+            let ashabahMessages = [];
+            let processedForAshabah = new Set();
+
+            // 1. Prioritas utama: Ashabah bil Ghair
+            for (const rule of ashabahBilGhairRules) {
+                if (activeIds.includes(rule.perempuan) && activeIds.includes(rule.laki)) {
+                    ashabahMessages.push(rule.keterangan);
+                    processedForAshabah.add(rule.perempuan);
+                    processedForAshabah.add(rule.laki); // Laki-laki juga diproses sebagai bagian dari grup ini
+                }
+            }
+
+            // 2. Ashabah ma'al Ghair
+            for (const rule of ashabahMaalGhairRules) {
+                // Hanya proses jika ahli waris belum diproses oleh aturan bil Ghair
+                if (activeIds.includes(rule.ahli_waris) && !processedForAshabah.has(rule.ahli_waris)) {
+                    const foundBersama = rule.bersama.some(id => activeIds.includes(id));
+                    if (foundBersama) {
+                        ashabahMessages.push(rule.keterangan);
+                        processedForAshabah.add(rule.ahli_waris);
+                    }
+                }
+            }
+
+            // 3. Ashabah bin Nafsi
+            for (const aw of activeAhliWaris) {
+                // Hanya proses jika belum diproses oleh aturan lain (misal, sebagai bagian dari grup bil Ghair)
+                if (aw.is_ashabah_bin_nafsi && !processedForAshabah.has(aw.id)) {
+                    const ashabahData = ahliWarisData.find(a => a.id === aw.id);
+                    ashabahMessages.push(`${ashabahData.nama} adalah Ashabah bin Nafsi.`);
+                    processedForAshabah.add(aw.id);
+                }
+            }
+
+            // --- Gabungkan dan Tampilkan Semua Pesan ---
+            let allMessages = [];
+            if (hijabMessages.length > 0) {
+                allMessages.push('<strong>Status Hijab:</strong>');
+                allMessages.push(...hijabMessages);
+            }
+            if (ashabahMessages.length > 0) {
+                if(allMessages.length > 0) allMessages.push('<br>'); // Spacer
+                allMessages.push('<strong>Status Ashabah:</strong>');
+                allMessages.push(...ashabahMessages);
+            }
+
+            ashabahInfoEl.innerHTML = allMessages.join('<br>');
+        }
+
+        container.addEventListener('change', updateWarisStatus);
+
+        // Panggil sekali di awal untuk inisialisasi
+        updateWarisStatus();
+    </script>
+</body>
+</html>
