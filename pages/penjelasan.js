@@ -24,7 +24,7 @@ export default function PenjelasanPage() {
     } else {
       setHasil({}); // Set hasil to empty if no assets to distribute
     }
-  }, [data]);
+  }, [JSON.stringify(data)]); // Use stringify to prevent infinite loop on object reference change
 
   if (!hasil) {
     return <div className="p-6 max-w-lg mx-auto text-center">Memuat...</div>; // Loading state
