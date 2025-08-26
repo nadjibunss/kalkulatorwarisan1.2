@@ -7,6 +7,13 @@ export default function Step3() {
   const { setData, data } = useData();
   const router = useRouter();
 
+  const handleValChange = (e) => {
+    const value = e.target.value.replace(/\./g, '');
+    if (!isNaN(value)) {
+      setVal(value);
+    }
+  };
+
   const hartaBersihSementara = data.hartaKotor - data.hutang;
   const maxWasiat = hartaBersihSementara / 3;
 
@@ -24,14 +31,22 @@ export default function Step3() {
       <h1 className="text-xl font-bold mb-4">Step 3: Wasiat</h1>
       <p className="mb-2 text-gray-600">Maksimal 1/3 dari sisa harta setelah hutang.</p>
       <p className="mb-4">Batas maksimal: Rp {maxWasiat.toLocaleString("id-ID")}</p>
-      <input
-        type="number"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        className="border p-2 w-full mb-4"
-        placeholder="Masukkan total wasiat"
-      />
-      <button onClick={next} className="bg-blue-600 text-white px-4 py-2 rounded">Next ➡</button>
+      <div className="relative mb-4">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+          Rp
+        </span>
+        <input
+          type="text"
+          value={val}
+          onChange={handleValChange}
+          className="border p-2 pl-10 w-full"
+          placeholder="0"
+        />
+      </div>
+      <div className="flex justify-between">
+        <button onClick={() => router.back()} className="bg-gray-500 text-white px-4 py-2 rounded">⬅ Back</button>
+        <button onClick={next} className="bg-blue-600 text-white px-4 py-2 rounded">Next ➡</button>
+      </div>
     </div>
   );
           }
