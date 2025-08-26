@@ -46,7 +46,7 @@ export default function AhliWarisPage() {
 
   const next = () => {
     setData({ ...data, ahliWaris: waris });
-    router.push("/hasil");
+    router.push("/penjelasan");
   };
 
   const handleBlockedClick = (message) => {
@@ -92,11 +92,11 @@ export default function AhliWarisPage() {
           <input id="anakPerempuan" type="number" min="0" value={waris.anakP} onChange={(e) => updateWaris("anakP", e)} className={numberInputStyle} />
         </div>
         <div onClick={cucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${cucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
-          <label htmlFor="cucuLaki" className={numberInputLabelStyle}>Cucu Laki-laki (dari anak lk.):</label>
+          <label htmlFor="cucuLaki" className={numberInputLabelStyle}>Cucu Laki-laki:</label>
           <input id="cucuLaki" type="number" min="0" value={waris.cucuL} disabled={cucuBlocked} onChange={(e) => updateWaris("cucuL", e)} className={numberInputStyle} />
         </div>
         <div onClick={cucuBlocked ? () => handleBlockedClick("Cucu terhalang (hijab) oleh Anak Laki-laki.") : undefined} className={`${numberInputContainerStyle} ${cucuBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}>
-          <label htmlFor="cucuPerempuan" className={numberInputLabelStyle}>Cucu Perempuan (dari anak lk.):</label>
+          <label htmlFor="cucuPerempuan" className={numberInputLabelStyle}>Cucu Perempuan:</label>
           <input id="cucuPerempuan" type="number" min="0" value={waris.cucuP} disabled={cucuBlocked} onChange={(e) => updateWaris("cucuP", e)} className={numberInputStyle} />
         </div>
 
