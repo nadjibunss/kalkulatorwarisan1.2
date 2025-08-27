@@ -59,17 +59,23 @@ export default function AhliWarisPage() {
   };
 
   const next = () => {
-    // 1. Calculate results to get explanations
-    const tempHarta = 1000; // Use a dummy value for explanation purposes
+    const tempHarta = 1000; // Dummy harta to get statuses
     const hasilPenjelasan = hitungFaraid(tempHarta, waris);
 
-    // 2. Build the explanation string
+    const asabahExplanations = {
+      "'Aṣabah bin-Nafs": "Ashabah bin Nafsi: Mendapat sisa karena kedudukannya sendiri sebagai kerabat laki-laki.",
+      "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena mewaris bersama ahli waris laki-laki yang setingkat.",
+      "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah karena mewaris bersama ahli waris perempuan lain (anak/cucu perempuan).",
+    };
+
     let alertMessage = "--- Penjelasan Status Ahli Waris ---\n\n";
+
     const blockedHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.status.includes("Terhalang"));
     const asabahHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.deskripsi.includes("Aṣabah"));
+    const fardhHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.deskripsi.includes("Ashabul Furudh"));
 
     if (blockedHeirs.length > 0) {
-      alertMessage += "Ahli Waris Terhalang (Hijab):\n";
+      alertMessage += "AHLI WARIS TERHALANG (HIJAB):\n";
       blockedHeirs.forEach(([key, value]) => {
         alertMessage += `- ${getHeirName(key)}: ${value.deskripsi}\n`;
       });
@@ -77,21 +83,26 @@ export default function AhliWarisPage() {
     }
 
     if (asabahHeirs.length > 0) {
-      alertMessage += "Ahli Waris 'Aṣabah (Penerima Sisa):\n";
-      asabahHeirs.forEach(([key, value]) => {
-        alertMessage += `- ${getHeirName(key)}: ${value.deskripsi}\n`;
+      alertMessage += "STATUS 'AṢABAH (PENERIMA SISA):\n";
+      const asabahTypes = [...new Set(asabahHeirs.map(([, value]) => value.deskripsi))];
+      asabahTypes.forEach(type => {
+        alertMessage += `${asabahExplanations[type] || ''}\n`;
+        const heirsOfType = asabahHeirs.filter(([, value]) => value.deskripsi === type);
+        heirsOfType.forEach(([key]) => {
+          alertMessage += `  - ${getHeirName(key)}\n`;
+        });
       });
       alertMessage += "\n";
     }
 
-    if (blockedHeirs.length === 0 && asabahHeirs.length === 0) {
-      alertMessage += "Semua ahli waris mendapat bagian tetap (Ashabul Furudh)."
+    if (fardhHeirs.length > 0 && asabahHeirs.length === 0 && Object.values(hasilPenjelasan).some(v => v.jumlah > 0)) {
+        alertMessage += "Semua ahli waris yang berhak mendapat bagian tetap (Ashabul Furudh) dan tidak ada sisa (tidak ada 'Aṣabah).\n";
+    } else if (Object.values(hasilPenjelasan).every(v => v.jumlah === 0)) {
+        alertMessage += "Tidak ada ahli waris yang berhak menerima warisan dari daftar yang dipilih.";
     }
 
-    // 3. Show the alert
     alert(alertMessage);
 
-    // 4. Set data and navigate
     setData({ ...data, ahliWaris: waris });
     router.push("/hasil");
   };
