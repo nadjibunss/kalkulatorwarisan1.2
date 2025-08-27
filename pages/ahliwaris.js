@@ -26,11 +26,6 @@ export default function AhliWarisPage() {
 
   const getHeirName = (key) => heirNames[key] || key;
 
-  useEffect(() => {
-    // Sync with context on initial load or if context changes
-    setWaris(data.ahliWaris);
-  }, [data.ahliWaris]);
-
   const updateWaris = (key, value) => {
     setWaris(prevWaris => {
       const newWaris = { ...prevWaris, [key]: value };
