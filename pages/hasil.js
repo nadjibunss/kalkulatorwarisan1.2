@@ -15,7 +15,7 @@ export default function HasilPage() {
   // This effect handles the case where the user navigates directly to this page
   useEffect(() => {
     if (isClient && (!data.gender || !data.hartaKotor)) {
-        router.replace('/home');
+        router.replace('/');
     }
   }, [isClient, data.gender, data.hartaKotor, router]);
 
@@ -66,7 +66,7 @@ export default function HasilPage() {
         anakL: 0, anakP: 0, cucuL: 0, cucuP: 0, saudaraL: 0, saudaraP: 0,
       }
     });
-    router.push('/home');
+    router.push('/');
   }
 
   return (
