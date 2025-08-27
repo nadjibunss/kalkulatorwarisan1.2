@@ -24,7 +24,7 @@ export default function HomePage() {
     router.push("/hutang");
   };
 
-  const isNextDisabled = !gender || !val || parseFloat(val) <= 0;
+  const isNextDisabled = !gender || val.trim() === '';
 
   return (
     <div className="p-6 max-w-lg mx-auto">
