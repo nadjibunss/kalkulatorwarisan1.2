@@ -14,8 +14,8 @@ export default function AhliWarisPage() {
     istri: 'Istri',
     ayah: 'Ayah',
     ibu: 'Ibu',
-    kakek: 'Kakek dari si yang meninggal',
-    nenek: 'Nenek dari si yang meninggal',
+    kakek: 'Kakek',
+    nenek: 'Nenek',
     anakL: 'Anak Laki-laki',
     anakP: 'Anak Perempuan',
     cucuL: 'Cucu Laki-laki',
@@ -64,8 +64,8 @@ export default function AhliWarisPage() {
 
     const asabahExplanations = {
       "'Aṣabah bin-Nafs": "Ashabah bin Nafsi: Mendapat sisa karena kedudukannya sendiri sebagai kerabat laki-laki.",
-      "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena mewaris bersama ahli waris laki-laki yang setingkat.",
-      "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah karena mewaris bersama ahli waris perempuan lain (anak/cucu perempuan).",
+      "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena mewarisi bersama ahli waris laki-laki yang setingkat.",
+      "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah karena mewarisi bersama ahli waris perempuan lain (anak/cucu perempuan).",
     };
 
     let alertMessage = "--- Penjelasan Status Ahli Waris ---\n\n";
