@@ -33,8 +33,8 @@ export default function HasilPage() {
     istri: 'Istri',
     ayah: 'Ayah',
     ibu: 'Ibu',
-    kakek: 'Kakek',
-    nenek: 'Nenek',
+    kakek: 'Kakek dari si yang meninggal',
+    nenek: 'Nenek dari si yang meninggal',
     anakL: 'Anak Laki-laki',
     anakP: 'Anak Perempuan',
     cucuL: 'Cucu Laki-laki',
@@ -43,7 +43,20 @@ export default function HasilPage() {
     saudaraP: 'Saudara Perempuan',
   };
 
+  const asabahExplanations = {
+    "'Aṣabah bin-Nafs": "Ashabah bin Nafsi: Mendapat sisa karena kedudukannya sendiri.",
+    "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena ada ahli waris laki-laki setingkat.",
+    "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah bersama ahli waris perempuan lain.",
+  };
+
   const getHeirName = (key) => heirNames[key] || key;
+
+  const getDeskripsiLengkap = (value) => {
+    if (value.deskripsi && asabahExplanations[value.deskripsi]) {
+      return asabahExplanations[value.deskripsi];
+    }
+    return value.deskripsi || value.status;
+  };
 
   const formatRupiah = (number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -104,7 +117,7 @@ export default function HasilPage() {
                   Object.entries(hasil).map(([key, value]) => (
                     <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{getHeirName(key)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{value.deskripsi || value.status}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getDeskripsiLengkap(value)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">{formatRupiah(value.jumlah)}</td>
                     </tr>
                   ))
