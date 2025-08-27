@@ -29,7 +29,7 @@ export default function Step3() {
   return (
     <div className="p-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold mb-4">Step 3: Wasiat</h1>
-      <p className="mb-2 text-gray-600">Maksimal 1/3 dari sisa harta setelah hutang.</p>
+      <p className="mb-2 text-gray-600">Maksimal 1/3 dari sisa harta setelah hutang dan biaya pemakaman.</p>
       <p className="mb-4">Batas maksimal: Rp {maxWasiat.toLocaleString("id-ID")}</p>
       <div className="relative mb-4">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
