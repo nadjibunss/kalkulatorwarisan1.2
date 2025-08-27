@@ -114,13 +114,28 @@ export default function HasilPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {Object.keys(hasil).length > 0 ? (
-                  Object.entries(hasil).map(([key, value]) => (
-                    <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{getHeirName(key)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getDeskripsiLengkap(value)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">{formatRupiah(value.jumlah)}</td>
-                    </tr>
-                  ))
+                  Object.entries(hasil).map(([key, value]) => {
+                    const count = ahliWaris[key];
+                    const isCountable = ['anakL', 'anakP', 'cucuL', 'cucuP', 'saudaraL', 'saudaraP', 'istri'].includes(key);
+
+                    return (
+                      <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
+                          {getHeirName(key)}
+                          {isCountable && count > 1 ? <span className="font-normal text-gray-500"> (x{count})</span> : ''}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getDeskripsiLengkap(value)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">
+                          <div>{formatRupiah(value.jumlah)}</div>
+                          {isCountable && count > 1 && value.jumlah > 0 && (
+                            <div className="text-xs text-gray-500">
+                              (@ {formatRupiah(value.jumlah / count)} / org)
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
                 ) : (
                   <tr>
                     <td colSpan="3" className="px-6 py-4 text-center text-gray-500">Tidak ada ahli waris yang berhak menerima.</td>
