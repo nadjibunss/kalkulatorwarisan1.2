@@ -69,7 +69,6 @@ export default function AhliWarisPage() {
     if (hasHeirs) {
       Object.entries(hasilPenjelasan).forEach(([key, value]) => {
         const heirName = getHeirName(key);
-        // For heirs with counts (like anakP > 1), show the name without count for the alert
         alertMessage += `• ${heirName}: ${value.deskripsi}\n`;
       });
     } else {
