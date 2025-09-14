@@ -80,6 +80,8 @@
         const checkboxes = document.querySelectorAll('input[name="ahliWaris"]');
         const ashabahInfoEl = document.getElementById('ashabahInfo');
 
+        let previousAshabahMessages = [];
+
         function updateWarisStatus() {
             const selectedIds = Array.from(checkboxes)
                 .filter(cb => cb.checked)
@@ -179,6 +181,17 @@
                     processedForAshabah.add(aw.id);
                 }
             }
+
+            // --- Logika Peringatan (Alert) untuk Ashabah Baru ---
+            ashabahMessages.forEach(msg => {
+                if (!previousAshabahMessages.includes(msg)) {
+                    // Hapus tag HTML jika ada untuk alert yang lebih bersih
+                    const alertMsg = msg.replace(/<[^>]*>?/gm, '');
+                    alert(alertMsg);
+                }
+            });
+            previousAshabahMessages = [...ashabahMessages];
+
 
             // --- Gabungkan dan Tampilkan Semua Pesan ---
             let allMessages = [];
