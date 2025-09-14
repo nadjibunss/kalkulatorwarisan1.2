@@ -1,18 +1,25 @@
 /**
- * Mesin Kalkulator Faraid V4 - Final Robust Version
+ * Mesin Kalkulator Faraid V6 - Dynamic & Detailed Descriptions
  *
- * This version uses a more structured approach to prevent runtime errors.
- * 1. It separates share fractions from monetary amounts during calculation.
- * 2. It correctly handles Hijab, Ashabul Furudh, 'Asabah, 'Aul, and Radd.
- * 3. It ensures all data structures are handled consistently to prevent type errors.
- * 4. It returns a detailed object for every selected heir.
+ * This version generates dynamic, specific, and detailed descriptions for all heirs.
+ * 1. Returns a single, comprehensive 'deskripsi' string for each heir.
+ * 2. Dynamically generates 'Asabah explanations based on the specific heirs involved.
+ * 3. Includes detailed reasons and fractions for Ashabul Furudh.
+ * 4. Refactors calculation logic for 'Aul, Radd, and Umariyyatain for clarity and correctness.
  */
 export default function hitungFaraid(harta, ahliWarisInput) {
+    // Helper for names used in dynamic descriptions
+    const heirNames = {
+        suami: 'Suami', istri: 'Istri', ayah: 'Ayah', ibu: 'Ibu', kakek: 'Kakek', nenek: 'Nenek',
+        anakL: 'Anak Laki-laki', anakP: 'Anak Perempuan', cucuL: 'Cucu Laki-laki', cucuP: 'Cucu Perempuan',
+        saudaraL: 'Saudara Laki-laki', saudaraP: 'Saudara Perempuan',
+    };
+
     if (harta <= 0) {
         const result = {};
         for (const key in ahliWarisInput) {
-            if ((typeof ahliWarisInput[key] === 'boolean' && ahliWarisInput[key]) || (typeof ahliWarisInput[key] === 'number' && ahliWarisInput[key] > 0)) {
-                result[key] = { status: 'Terhalang', jumlah: 0, deskripsi: 'Harta tidak mencukupi.' };
+            if ((typeof ahliWarisInput[key] === 'boolean' && ahliWarisInput[key]) || (typeof ahliWarisInput[key] > 0)) {
+                result[key] = { jumlah: 0, deskripsi: 'Harta tidak mencukupi.' };
             }
         }
         return result;
@@ -20,117 +27,132 @@ export default function hitungFaraid(harta, ahliWarisInput) {
 
     let w = { ...ahliWarisInput };
     let fardh = {}; // Fractional shares for Ashabul Furudh
-    let deskripsi = {}; // Descriptions and statuses
+    let deskripsi = {}; // This will now store the final, detailed description string for each heir.
 
     // --- 1. HIJAB (Blocking) ---
     const adaAnakL = w.anakL > 0;
     const adaAnakP = w.anakP > 0;
     const adaAyah = w.ayah;
     const adaIbu = w.ibu;
-    const adaKakek = w.kakek;
-    const adaNenek = w.nenek;
 
-    if (adaAyah && adaKakek) {
-        deskripsi.kakek = { status: "Terhalang", deskripsi: "Terhalang oleh Ayah" };
-        w.kakek = false;
-    }
-    if (adaIbu && adaNenek) {
-        deskripsi.nenek = { status: "Terhalang", deskripsi: "Terhalang oleh Ibu" };
-        w.nenek = false;
-    }
+    if (adaAyah && w.kakek) { deskripsi.kakek = `Terhalang oleh ${heirNames.ayah}`; w.kakek = false; }
+    if (adaIbu && w.nenek) { deskripsi.nenek = `Terhalang oleh ${heirNames.ibu}`; w.nenek = false; }
     if (adaAnakL) {
-        if (w.cucuL > 0) { deskripsi.cucuL = { status: "Terhalang", deskripsi: "Oleh Anak Laki-laki" }; w.cucuL = 0; }
-        if (w.cucuP > 0) { deskripsi.cucuP = { status: "Terhalang", deskripsi: "Oleh Anak Laki-laki" }; w.cucuP = 0; }
+        if (w.cucuL > 0) { deskripsi.cucuL = `Terhalang oleh ${heirNames.anakL}`; w.cucuL = 0; }
+        if (w.cucuP > 0) { deskripsi.cucuP = `Terhalang oleh ${heirNames.anakL}`; w.cucuP = 0; }
     }
     if (adaAnakL || adaAyah) {
-        if (w.saudaraL > 0) { deskripsi.saudaraL = { status: "Terhalang", deskripsi: "Oleh Anak Laki-laki/Ayah" }; w.saudaraL = 0; }
-        if (w.saudaraP > 0) { deskripsi.saudaraP = { status: "Terhalang", deskripsi: "Oleh Anak Laki-laki/Ayah" }; w.saudaraP = 0; }
+        const blocker = adaAnakL ? heirNames.anakL : heirNames.ayah;
+        if (w.saudaraL > 0) { deskripsi.saudaraL = `Terhalang oleh ${blocker}`; w.saudaraL = 0; }
+        if (w.saudaraP > 0) { deskripsi.saudaraP = `Terhalang oleh ${blocker}`; w.saudaraP = 0; }
     }
 
-    // --- 2. ASHABUL FURUDH (Fixed Shares) ---
+    // --- 2. ASHABUL FURUDH (Fixed Shares) with Detailed Descriptions ---
     const adaAnak = adaAnakL || adaAnakP;
     const adaCucu = w.cucuL > 0 || w.cucuP > 0;
     const adaKeturunan = adaAnak || adaCucu;
     const jumlahSaudara = (w.saudaraL || 0) + (w.saudaraP || 0);
 
-    if (w.suami) fardh.suami = adaKeturunan ? 1/4 : 1/2;
-    if (w.istri) fardh.istri = adaKeturunan ? 1/8 : 1/4;
-
+    if (w.suami) {
+        fardh.suami = adaKeturunan ? 1/4 : 1/2;
+        deskripsi.suami = `Bagian ${adaKeturunan ? '1/4' : '1/2'} (karena ${adaKeturunan ? 'ada' : 'tidak ada'} keturunan)`;
+    }
+    if (w.istri) {
+        fardh.istri = adaKeturunan ? 1/8 : 1/4;
+        deskripsi.istri = `Bagian ${adaKeturunan ? '1/8' : '1/4'} (karena ${adaKeturunan ? 'ada' : 'tidak ada'} keturunan)`;
+    }
     if (w.ibu) {
         if (adaKeturunan || jumlahSaudara >= 2) {
             fardh.ibu = 1/6;
+            deskripsi.ibu = "Bagian 1/6 (ada keturunan/lebih dari 1 saudara)";
         } else if (w.ayah && (w.suami || w.istri)) {
-            fardh.ibu = "1/3 Sisa"; // Special case: Umariyyatain
+            fardh.ibu = "1/3 Sisa";
+            deskripsi.ibu = "Bagian 1/3 Sisa (Kasus Umariyyatain)";
         } else {
             fardh.ibu = 1/3;
+            deskripsi.ibu = "Bagian 1/3 (tidak ada keturunan/saudara)";
         }
     }
-
-    if (w.ayah && adaKeturunan) fardh.ayah = 1/6;
-    if (w.kakek && adaKeturunan && !w.ayah) fardh.kakek = 1/6;
-    if (w.nenek && !w.ibu) fardh.nenek = 1/6;
-
+    if (w.ayah && adaKeturunan) {
+        fardh.ayah = 1/6;
+        deskripsi.ayah = "Bagian 1/6 (karena ada keturunan)";
+    }
+    // ... (other fardh cases with descriptions)
+    if (w.kakek && adaKeturunan && !w.ayah) { fardh.kakek = 1/6; deskripsi.kakek = "Bagian 1/6 (ada keturunan, tdk ada Ayah)"; }
+    if (w.nenek && !w.ibu) { fardh.nenek = 1/6; deskripsi.nenek = "Bagian 1/6 (karena tdk ada Ibu)"; }
     if (!adaAnakL) {
-        if (w.anakP === 1 && w.cucuP === 0) fardh.anakP = 1/2;
-        else if (w.anakP >= 2) fardh.anakP = 2/3 / w.anakP; // Per-person share
-
+        if (w.anakP === 1 && !w.cucuL && w.cucuP === 0) { fardh.anakP = 1/2; deskripsi.anakP = "Bagian 1/2 (sendirian, tdk ada anak laki-laki)"; }
+        else if (w.anakP >= 2) { fardh.anakP = 2/3 / w.anakP; deskripsi.anakP = "Bagian 2/3 (bersama, tdk ada anak laki-laki)"; }
         if (w.anakP === 0 && !w.cucuL) {
-            if (w.cucuP === 1) fardh.cucuP = 1/2;
-            else if (w.cucuP >= 2) fardh.cucuP = 2/3 / w.cucuP;
-        } else if (w.anakP === 1 && w.cucuP > 0 && !w.cucuL) {
-            fardh.cucuP = (1/6) / w.cucuP; // Takmilah
-        }
+            if (w.cucuP === 1) { fardh.cucuP = 1/2; deskripsi.cucuP = "Bagian 1/2 (sendirian, tdk ada cucu laki-laki)"; }
+            else if (w.cucuP >= 2) { fardh.cucuP = 2/3 / w.cucuP; deskripsi.cucuP = "Bagian 2/3 (bersama, tdk ada cucu laki-laki)"; }
+        } else if (w.anakP === 1 && w.cucuP > 0 && !w.cucuL) { fardh.cucuP = (1/6) / w.cucuP; deskripsi.cucuP = "Bagian 1/6 (Takmilah, penyempurna 2/3)";}
     }
-
     if (!adaKeturunan && !w.ayah && !w.kakek && !w.saudaraL) {
-        if (w.saudaraP === 1) fardh.saudaraP = 1/2;
-        if (w.saudaraP >= 2) fardh.saudaraP = 2/3 / w.saudaraP;
+        if (w.saudaraP === 1) { fardh.saudaraP = 1/2; deskripsi.saudaraP = "Bagian 1/2 (sendirian, tdk ada furu'/usul laki-laki)"; }
+        if (w.saudaraP >= 2) { fardh.saudaraP = 2/3 / w.saudaraP; deskripsi.saudaraP = "Bagian 2/3 (bersama, tdk ada furu'/usul laki-laki)"; }
     }
 
-    // --- 3. 'ASABAH (Residuary) ---
+
+    // --- 3. 'ASABAH (Residuary) with Dynamic Descriptions ---
     let asabah = null;
-    if (w.anakL > 0) asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'anakL', ratio: 2, count: w.anakL }, { key: 'anakP', ratio: 1, count: w.anakP }] };
-    else if (w.cucuL > 0) asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'cucuL', ratio: 2, count: w.cucuL }, { key: 'cucuP', ratio: 1, count: w.cucuP }] };
-    else if (w.saudaraL > 0) asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'saudaraL', ratio: 2, count: w.saudaraL }, { key: 'saudaraP', ratio: 1, count: w.saudaraP }] };
-    else if (w.saudaraP > 0 && (w.anakP > 0 || w.cucuP > 0)) asabah = { type: "'Aṣabah ma'al-Ghair", heirs: [{ key: 'saudaraP', ratio: 1, count: w.saudaraP }] };
-    else if (w.ayah && !adaKeturunan) asabah = { type: "'Aṣabah bin-Nafs", heirs: [{ key: 'ayah', ratio: 1, count: 1 }] };
-    else if (w.kakek && !adaKeturunan && !w.ayah) asabah = { type: "'Aṣabah bin-Nafs", heirs: [{ key: 'kakek', ratio: 1, count: 1 }] };
+    if (w.anakL > 0) {
+        asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'anakL', ratio: 2, count: w.anakL }, { key: 'anakP', ratio: 1, count: w.anakP }] };
+        deskripsi.anakL = "'Aṣabah bin-Nafs";
+        if (w.anakP > 0) deskripsi.anakP = `Menjadi 'Aṣabah bil-Ghair bersama ${heirNames.anakL}`;
+    } else if (w.cucuL > 0) {
+        asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'cucuL', ratio: 2, count: w.cucuL }, { key: 'cucuP', ratio: 1, count: w.cucuP }] };
+        deskripsi.cucuL = "'Aṣabah bin-Nafs";
+        if (w.cucuP > 0) deskripsi.cucuP = `Menjadi 'Aṣabah bil-Ghair bersama ${heirNames.cucuL}`;
+    } else if (w.saudaraL > 0) {
+        asabah = { type: "'Aṣabah bil-Ghair", heirs: [{ key: 'saudaraL', ratio: 2, count: w.saudaraL }, { key: 'saudaraP', ratio: 1, count: w.saudaraP }] };
+        deskripsi.saudaraL = "'Aṣabah bin-Nafs";
+        if(w.saudaraP > 0) deskripsi.saudaraP = `Menjadi 'Aṣabah bil-Ghair bersama ${heirNames.saudaraL}`;
+    } else if (w.saudaraP > 0 && (w.anakP > 0 || w.cucuP > 0)) {
+        asabah = { type: "'Aṣabah ma'al-Ghair", heirs: [{ key: 'saudaraP', ratio: 1, count: w.saudaraP }] };
+        const withHeir = w.anakP > 0 ? heirNames.anakP : heirNames.cucuP;
+        deskripsi.saudaraP = `Menjadi 'Aṣabah ma'al-Ghair bersama ${withHeir}`;
+    } else if (w.ayah && !adaKeturunan) {
+        asabah = { type: "'Aṣabah bin-Nafs", heirs: [{ key: 'ayah', ratio: 1, count: 1 }] };
+        const baseText = deskripsi.ayah ? deskripsi.ayah + " + " : "";
+        deskripsi.ayah = baseText + "'Aṣabah bin-Nafs";
+    } else if (w.kakek && !adaKeturunan && !w.ayah) {
+        asabah = { type: "'Aṣabah bin-Nafs", heirs: [{ key: 'kakek', ratio: 1, count: 1 }] };
+        const baseText = deskripsi.kakek ? deskripsi.kakek + " + " : "";
+        deskripsi.kakek = baseText + "'Aṣabah bin-Nafs";
+    }
+
 
     // --- 4. CALCULATION ---
     let amounts = {};
-    let sisaHarta = harta;
-    let totalFardh = 0;
 
-    // Calculate spouse share first
-    if (fardh.suami) { amounts.suami = fardh.suami * harta; sisaHarta -= amounts.suami; }
-    if (fardh.istri) { amounts.istri = fardh.istri * harta; sisaHarta -= amounts.istri; }
+    // Calculate spouse share first for Umariyyatain case
+    if (fardh.suami) { amounts.suami = fardh.suami * harta; }
+    if (fardh.istri) { amounts.istri = fardh.istri * harta; }
 
-    // Handle Umariyyatain for Mother
+    const sisaSetelahPasangan = harta - (amounts.suami || amounts.istri || 0);
     if (fardh.ibu === "1/3 Sisa") {
-        amounts.ibu = (1/3) * sisaHarta;
-        sisaHarta -= amounts.ibu;
-        deskripsi.ibu = { status: "1/3 Sisa", deskripsi: "Kasus Umariyyatain" };
+        amounts.ibu = (1/3) * sisaSetelahPasangan;
     }
 
     // Calculate other fixed shares from original harta
     for (const p in fardh) {
-        if (!amounts[p]) { // if not already calculated (spouse, mother in umariyyatain)
+        if (!amounts[p] && typeof fardh[p] === 'number') {
             amounts[p] = fardh[p] * harta;
-            sisaHarta -= amounts[p];
         }
     }
 
-    // Check for 'Aul (total shares > harta)
-    const totalInitialAmount = Object.values(amounts).reduce((a, b) => a + b, 0);
-    if (totalInitialAmount > harta * 1.00001) { // Use tolerance for float issues
-        const factor = harta / totalInitialAmount;
+    const totalFardhAmount = Object.values(amounts).reduce((a, b) => a + b, 0);
+    let sisaHarta = harta - totalFardhAmount;
+
+    // Check for 'Aul
+    if (sisaHarta < -0.001) {
+        const factor = harta / totalFardhAmount;
         for (const key in amounts) {
             amounts[key] *= factor;
-            deskripsi[key] = { status: `Bagian ('Aul)`, deskripsi: "Bagian dikurangi secara proporsional" };
+            if(w[key]) deskripsi[key] = (deskripsi[key] || "Sisa") + " ('Aul)";
         }
         sisaHarta = 0;
-    } else {
-        sisaHarta = harta - Object.values(amounts).reduce((a, b) => a + b, 0);
     }
 
     // Distribute remainder to Asabah
@@ -138,29 +160,29 @@ export default function hitungFaraid(harta, ahliWarisInput) {
         const totalRatio = asabah.heirs.reduce((sum, heir) => sum + (heir.count * heir.ratio), 0);
         if (totalRatio > 0) {
             asabah.heirs.forEach(heir => {
-                const asabahShare = sisaHarta * (heir.count * heir.ratio) / totalRatio;
-                amounts[heir.key] = (amounts[heir.key] || 0) + asabahShare;
-                deskripsi[heir.key] = { status: (deskripsi[heir.key]?.status || "") + " + Sisa", deskripsi: asabah.type };
+                if(heir.count > 0){
+                    const asabahShare = sisaHarta * (heir.count * heir.ratio) / totalRatio;
+                    amounts[heir.key] = (amounts[heir.key] || 0) + asabahShare;
+                }
             });
             sisaHarta = 0;
         }
     }
 
-    // Check for Radd (remainder with no Asabah)
-    // Simplified Radd: Distribute remainder to non-spouse fardh-heirs
+    // Check for Radd
     if (sisaHarta > 0.001 && !asabah) {
         let raddHeirsShares = 0;
+        let raddHeirs = [];
         for (const p in fardh) {
-            if (p !== 'suami' && p !== 'istri') {
+            if (p !== 'suami' && p !== 'istri' && typeof fardh[p] === 'number' && w[p]) {
+                raddHeirs.push(p);
                 raddHeirsShares += fardh[p];
             }
         }
         if (raddHeirsShares > 0) {
-            for (const p in fardh) {
-                if (p !== 'suami' && p !== 'istri') {
-                    amounts[p] += sisaHarta * (fardh[p] / raddHeirsShares);
-                    deskripsi[p].status += " (Radd)";
-                }
+            for (const p of raddHeirs) {
+                amounts[p] += sisaHarta * (fardh[p] / raddHeirsShares);
+                deskripsi[p] = (deskripsi[p] || "Sisa") + " (Radd)";
             }
             sisaHarta = 0;
         }
@@ -169,11 +191,10 @@ export default function hitungFaraid(harta, ahliWarisInput) {
     // --- 5. Finalize output object ---
     const finalResult = {};
     for (const key in ahliWarisInput) {
-        if ((typeof ahliWarisInput[key] === 'boolean' && ahliWarisInput[key]) || (typeof ahliWarisInput[key] === 'number' && ahliWarisInput[key] > 0)) {
+        if ((typeof ahliWarisInput[key] === 'boolean' && ahliWarisInput[key]) || (ahliWarisInput[key] > 0)) {
             finalResult[key] = {
                 jumlah: amounts[key] || 0,
-                status: deskripsi[key]?.status || "Tidak Mendapat Bagian",
-                deskripsi: deskripsi[key]?.deskripsi || "Tidak ada bagian atau terhalang."
+                deskripsi: deskripsi[key] || "Tidak ada bagian atau terhalang."
             };
         }
     }

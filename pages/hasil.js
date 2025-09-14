@@ -43,20 +43,7 @@ export default function HasilPage() {
     saudaraP: 'Saudara Perempuan',
   };
 
-  const asabahExplanations = {
-    "'Aṣabah bin-Nafs": "Ashabah bin Nafsi: Mendapat sisa karena kedudukannya sendiri.",
-    "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena ada ahli waris laki-laki setingkat.",
-    "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah bersama ahli waris perempuan lain.",
-  };
-
   const getHeirName = (key) => heirNames[key] || key;
-
-  const getDeskripsiLengkap = (value) => {
-    if (value.deskripsi && asabahExplanations[value.deskripsi]) {
-      return asabahExplanations[value.deskripsi];
-    }
-    return value.deskripsi || value.status;
-  };
 
   const formatRupiah = (number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -119,12 +106,12 @@ export default function HasilPage() {
                     const isCountable = ['anakL', 'anakP', 'cucuL', 'cucuP', 'saudaraL', 'saudaraP', 'istri'].includes(key);
 
                     return (
-                      <tr key={key} className={value.status.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
+                      <tr key={key} className={value.deskripsi.includes('Terhalang') ? 'bg-red-50 text-gray-500' : 'bg-white'}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
                           {getHeirName(key)}
                           {isCountable && count > 1 ? <span className="font-normal text-gray-500"> (x{count})</span> : ''}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{getDeskripsiLengkap(value)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{value.deskripsi}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">
                           <div>{formatRupiah(value.jumlah)}</div>
                           {isCountable && count > 1 && value.jumlah > 0 && (

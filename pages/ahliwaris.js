@@ -62,43 +62,18 @@ export default function AhliWarisPage() {
     const tempHarta = 1000; // Dummy harta to get statuses
     const hasilPenjelasan = hitungFaraid(tempHarta, waris);
 
-    const asabahExplanations = {
-      "'Aṣabah bin-Nafs": "Ashabah bin Nafsi: Mendapat sisa karena kedudukannya sendiri sebagai kerabat laki-laki.",
-      "'Aṣabah bil-Ghair": "Ashabah bil Ghair: Menjadi 'aṣabah karena mewarisi bersama ahli waris laki-laki yang setingkat.",
-      "'Aṣabah ma'al-Ghair": "Ashabah ma'al Ghair: Menjadi 'aṣabah karena mewarisi bersama ahli waris perempuan lain (anak/cucu perempuan).",
-    };
-
     let alertMessage = "--- Penjelasan Status Ahli Waris ---\n\n";
 
-    const blockedHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.status.includes("Terhalang"));
-    const asabahHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.deskripsi.includes("Aṣabah"));
-    const fardhHeirs = Object.entries(hasilPenjelasan).filter(([, value]) => value.deskripsi.includes("Ashabul Furudh"));
+    const hasHeirs = Object.keys(hasilPenjelasan).length > 0;
 
-    if (blockedHeirs.length > 0) {
-      alertMessage += "AHLI WARIS TERHALANG (HIJAB):\n";
-      blockedHeirs.forEach(([key, value]) => {
-        alertMessage += `- ${getHeirName(key)}: ${value.deskripsi}\n`;
+    if (hasHeirs) {
+      Object.entries(hasilPenjelasan).forEach(([key, value]) => {
+        const heirName = getHeirName(key);
+        // For heirs with counts (like anakP > 1), show the name without count for the alert
+        alertMessage += `• ${heirName}: ${value.deskripsi}\n`;
       });
-      alertMessage += "\n";
-    }
-
-    if (asabahHeirs.length > 0) {
-      alertMessage += "STATUS 'AṢABAH (PENERIMA SISA):\n";
-      const asabahTypes = [...new Set(asabahHeirs.map(([, value]) => value.deskripsi))];
-      asabahTypes.forEach(type => {
-        alertMessage += `${asabahExplanations[type] || ''}\n`;
-        const heirsOfType = asabahHeirs.filter(([, value]) => value.deskripsi === type);
-        heirsOfType.forEach(([key]) => {
-          alertMessage += `  - ${getHeirName(key)}\n`;
-        });
-      });
-      alertMessage += "\n";
-    }
-
-    if (fardhHeirs.length > 0 && asabahHeirs.length === 0 && Object.values(hasilPenjelasan).some(v => v.jumlah > 0)) {
-        alertMessage += "Semua ahli waris yang berhak mendapat bagian tetap (Ashabul Furudh) dan tidak ada sisa (tidak ada 'Aṣabah).\n";
-    } else if (Object.values(hasilPenjelasan).every(v => v.jumlah === 0)) {
-        alertMessage += "Tidak ada ahli waris yang berhak menerima warisan dari daftar yang dipilih.";
+    } else {
+      alertMessage += "Tidak ada ahli waris yang dipilih atau berhak.";
     }
 
     alert(alertMessage);
